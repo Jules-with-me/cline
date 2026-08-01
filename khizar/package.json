@@ -4,17 +4,16 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "apps/web"
+    "apps/web/client",
+    "apps/web/server"
   ],
   "engines": {
     "bun": ">=1.0.0",
     "node": ">=22"
   },
   "scripts": {
-    "build": "bun run --filter \"@khizar/*\" build",
     "dev:server": "bun run --cwd apps/web/server src/server.ts",
-    "dev:client": "bun run --cwd apps/web/client dev",
-    "test": "bun test packages/**/*"
+    "dev:client": "bun run --cwd apps/web/client dev"
   },
   "devDependencies": {
     "@types/bun": "^1.0.0",

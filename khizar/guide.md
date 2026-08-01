@@ -23,7 +23,14 @@ Open your terminal and navigate to the `khizar` project directory:
 cd khizar
 ```
 
-### Step 2: Configure Environment Variables
+### Step 2: Install Workspace Packages
+Before running the backend, resolve workspace package configurations by executing `bun install` in the root `khizar` workspace directory:
+
+```bash
+bun install
+```
+
+### Step 3: Configure Environment Variables
 Copy the template `.env.template` file to a new `.env` file:
 
 ```bash
@@ -34,10 +41,10 @@ Open `.env` in your text editor and fill in your Gemini API key:
 ```ini
 # Gemini AI Configuration
 GEMINI_API_KEY=AIzaSyYourActualGeminiAPIKeyHere
-GEMINI_MODEL=gemini-2.5-flash-preview-03-25
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
-### Step 3: Run the Web Backend Server
+### Step 4: Run the Web Backend Server
 Start the high-performance Bun-based REST & WebSocket backend server on your local PC:
 
 ```bash
@@ -49,12 +56,14 @@ The terminal will print:
 
 The server is now listening for incoming HTTP requests (auth/code-generation) and real-time WebSocket streams on port `8787`!
 
-### Step 4: Launch the React Frontend Client
+*Note: Server modules leverage safe relative imports to guarantee direct execution on any workspace environment.*
+
+### Step 5: Launch the React Frontend Client
 To launch the React SPA client locally, open a second terminal window and run:
 
 ```bash
 # Navigate to client and install dependencies
-cd khizar/apps/web/client
+cd apps/web/client
 bun install
 
 # Start local React Vite dev server

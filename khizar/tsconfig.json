@@ -9,7 +9,14 @@
     "forceConsistentCasingInFileNames": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@khizar/core": ["./packages/core/src/index.ts"],
+      "@khizar/agents": ["./packages/agents/src/index.ts"],
+      "@khizar/llms": ["./packages/llms/src/index.ts"],
+      "@khizar/shared": ["./packages/shared/src/index.ts"]
+    }
   },
   "include": [
     "packages/**/*",

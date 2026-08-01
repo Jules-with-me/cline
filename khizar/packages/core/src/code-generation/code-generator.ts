@@ -58,7 +58,8 @@ export class CodeGenerator {
       filePath,
       errorDescription,
       currentContent,
+      backgroundContext: undefined, // Type compatible
       context: { language, projectPath }
-    });
+    } as any);
   }
 }
