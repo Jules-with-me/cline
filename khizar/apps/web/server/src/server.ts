@@ -2,13 +2,13 @@
 import { join } from "node:path";
 import process from "node:process";
 import jwt from "jsonwebtoken";
-import type { IDatabaseAdapter, IFileSystemDriver, IExecutionDriver } from "@khizar/core";
+import type { IDatabaseAdapter } from "@khizar/core";
+import { handleCodeRoutes } from "./api/code-routes";
 
 // --- ENV CONFS & CONSTANTS ---
 const PORT = Number(process.env.KHIZAR_SERVER_PORT) || 8787;
 const HOST = process.env.KHIZAR_SERVER_HOST || "127.0.0.1";
 const JWT_SECRET = process.env.KHIZAR_JWT_SECRET || "khizar-secret-token";
-const ENCRYPTION_SECRET = process.env.KHIZAR_ENCRYPTION_SECRET || "khizar-aes-32-character-key-here";
 
 interface ClientPeer {
   id: string;
@@ -114,74 +114,6 @@ export class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   }
 }
 
-// --- SECURE SANDBOXED FILE SYSTEM DRIVER ---
-export class PhysicalFileSystemDriver implements IFileSystemDriver {
-  constructor(private readonly workspaceRoot: string) {
-    this.workspaceRoot = join(process.cwd(), workspaceRoot);
-  }
-
-  resolvePath(relativePath: string): string {
-    const absolute = join(this.workspaceRoot, relativePath);
-    if (!absolute.startsWith(this.workspaceRoot)) {
-      throw new Error(`Security Violation: Path traversal outside workspace boundary detected: ${relativePath}`);
-    }
-    return absolute;
-  }
-
-  async readFile(path: string): Promise<string> {
-    const resolved = this.resolvePath(path);
-    const file = Bun.file(resolved);
-    if (!(await file.exists())) throw new Error(`File not found: ${path}`);
-    return file.text();
-  }
-
-  async writeFile(path: string, content: string): Promise<void> {
-    const resolved = this.resolvePath(path);
-    await Bun.write(resolved, content);
-  }
-
-  async deleteFile(path: string): Promise<void> {
-    const resolved = this.resolvePath(path);
-    await Bun.write(resolved, ""); // Mock unlink safely
-  }
-
-  async listDirectory(path: string): Promise<any[]> {
-    // Simple list mocking Bun / fs APIs
-    return [];
-  }
-
-  async createDirectory(path: string): Promise<void> {
-    // Mock mkdir
-  }
-
-  async exists(path: string): Promise<boolean> {
-    return Bun.file(this.resolvePath(path)).exists();
-  }
-}
-
-// --- SECURE BASH/COMMAND EXECUTOR DRIVER ---
-export class LocalExecutorDriver implements IExecutionDriver {
-  async executeCommand(command: string): Promise<any> {
-    // Safeguard direct local run in web
-    if (command.includes("rm -rf") || command.includes(":(){ :|:& };:")) {
-      throw new Error("Malicious shell sequence rejected by executor guard.");
-    }
-    const proc = Bun.spawn(["sh", "-c", command], { stdout: "pipe", stderr: "pipe" });
-    const stdout = await new Response(proc.stdout).text();
-    const stderr = await new Response(proc.stderr).text();
-    await proc.exited;
-    return { stdout, stderr, exitCode: proc.exitCode ?? 0 };
-  }
-
-  async executeCode(code: string, language: string): Promise<any> {
-    return { success: true, output: "Code compilation mock output." };
-  }
-
-  async validateCode(code: string, language: string): Promise<any> {
-    return { valid: true };
-  }
-}
-
 // --- AUTH METRICS & MIDDLEWARES ---
 function signUserToken(userId: string, email: string): string {
   return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: "7d" });
@@ -197,8 +129,6 @@ function verifyUserToken(token: string): any {
 
 // --- INITIALIZE INTEGRATION LAYER ---
 const db = new InMemoryDatabaseAdapter();
-const fsDriver = new PhysicalFileSystemDriver("workspace");
-const execDriver = new LocalExecutorDriver();
 const activePeers = new Set<ClientPeer>();
 
 // --- RUN HTTP & WEBSOCKET BUN SERVER ---
@@ -207,6 +137,12 @@ const server = Bun.serve<ClientPeer>({
   hostname: HOST,
   async fetch(req, server) {
     const url = new URL(req.url);
+
+    // REST API Routing - Code Operations
+    if (url.pathname.startsWith("/api/code/")) {
+      const codeRes = await handleCodeRoutes(req, url);
+      if (codeRes) return codeRes;
+    }
 
     // REST API Routing - Authentication
     if (url.pathname === "/api/auth/register" && req.method === "POST") {
@@ -267,8 +203,8 @@ const server = Bun.serve<ClientPeer>({
             type: "defaults",
             defaults: {
               workspaceRoot: "workspace",
-              provider: "anthropic",
-              model: "claude-3-5-sonnet",
+              provider: "gemini",
+              model: "gemini-2.5-flash-preview-03-25",
             },
           }));
         } else if (frame.type === "send") {

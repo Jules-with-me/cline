@@ -1,5 +1,5 @@
 // khizar/apps/web/client/src/App.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   BotIcon,
   SettingsIcon,
@@ -8,8 +8,10 @@ import {
   PlusIcon,
   SendIcon,
   ShieldAlertIcon,
-  LogOutIcon
+  LogOutIcon,
+  SparklesIcon
 } from "lucide-react";
+import { CodeGenerationPage } from "./pages/CodeGenerationPage";
 
 export default function App() {
   const [messages, setMessages] = useState<any[]>([
@@ -21,6 +23,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [activeView, setActiveView] = useState<"chat" | "codegen">("chat");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,9 +117,23 @@ export default function App() {
         </div>
 
         <nav className="flex-1 space-y-1">
-          <button className="flex w-full items-center gap-3 rounded-md bg-zinc-800/50 px-3 py-2 text-sm font-semibold text-zinc-100">
-            <MessageSquareIcon className="size-4 text-emerald-400" />
+          <button
+            onClick={() => setActiveView("chat")}
+            className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold ${
+              activeView === "chat" ? "bg-zinc-800/50 text-zinc-100" : "text-zinc-400 hover:bg-zinc-900/40 hover:text-zinc-200"
+            }`}
+          >
+            <MessageSquareIcon className="size-4" />
             <span>Chat Session</span>
+          </button>
+          <button
+            onClick={() => setActiveView("codegen")}
+            className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold ${
+              activeView === "codegen" ? "bg-zinc-800/50 text-zinc-100" : "text-zinc-400 hover:bg-zinc-900/40 hover:text-zinc-200"
+            }`}
+          >
+            <SparklesIcon className="size-4" />
+            <span>AI Code Engineering</span>
           </button>
           <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-zinc-400 hover:bg-zinc-900/40 hover:text-zinc-200">
             <ClockIcon className="size-4" />
@@ -140,8 +157,8 @@ export default function App() {
       </aside>
 
       {/* Main Panel Content */}
-      <main className="flex flex-col">
-        <header className="flex h-14 items-center justify-between border-b border-zinc-800 px-6 bg-zinc-900/10">
+      <main className="flex flex-col h-screen overflow-hidden">
+        <header className="flex h-14 items-center justify-between border-b border-zinc-800 px-6 bg-zinc-900/10 shrink-0">
           <div className="flex items-center gap-2">
             <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-xs font-semibold text-zinc-400">{status}</span>
@@ -152,45 +169,51 @@ export default function App() {
           </div>
         </header>
 
-        {/* Messages Stream */}
-        <section className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={`flex max-w-[85%] flex-col rounded-lg p-4 text-sm ${
-                m.role === "user"
-                  ? "ml-auto bg-emerald-500 text-zinc-950 font-medium"
-                  : "mr-auto border border-zinc-850 bg-zinc-900/50 text-zinc-100"
-              }`}
-            >
-              <span className="mb-1 block text-[10px] uppercase font-bold tracking-wider opacity-60">
-                {m.role === "user" ? "Developer" : "Khizar Agent"}
-              </span>
-              <p className="whitespace-pre-wrap">{m.text}</p>
-            </div>
-          ))}
-        </section>
+        {activeView === "codegen" ? (
+          <CodeGenerationPage />
+        ) : (
+          <div className="flex flex-col flex-1 overflow-hidden">
+            {/* Messages Stream */}
+            <section className="flex-1 overflow-y-auto p-6 space-y-4">
+              {messages.map((m) => (
+                <div
+                  key={m.id}
+                  className={`flex max-w-[85%] flex-col rounded-lg p-4 text-sm ${
+                    m.role === "user"
+                      ? "ml-auto bg-emerald-500 text-zinc-950 font-medium"
+                      : "mr-auto border border-zinc-850 bg-zinc-900/50 text-zinc-100"
+                  }`}
+                >
+                  <span className="mb-1 block text-[10px] uppercase font-bold tracking-wider opacity-60">
+                    {m.role === "user" ? "Developer" : "Khizar Agent"}
+                  </span>
+                  <p className="whitespace-pre-wrap">{m.text}</p>
+                </div>
+              ))}
+            </section>
 
-        {/* Prompt Input Area */}
-        <footer className="border-t border-zinc-850 p-4 bg-zinc-900/10">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={inputText}
-              onChange={e => setInputText(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleSend()}
-              placeholder="Ask Khizar to build, test, and write code securely..."
-              className="flex-1 rounded-md border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-emerald-500"
-            />
-            <button
-              onClick={handleSend}
-              className="flex items-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
-            >
-              <SendIcon className="size-4" />
-              <span>Send</span>
-            </button>
+            {/* Prompt Input Area */}
+            <footer className="border-t border-zinc-850 p-4 bg-zinc-900/10 shrink-0">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={inputText}
+                  onChange={e => setInputText(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleSend()}
+                  placeholder="Ask Khizar to build, test, and write code securely..."
+                  className="flex-1 rounded-md border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-emerald-500"
+                />
+                <button
+                  onClick={handleSend}
+                  className="flex items-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
+                >
+                  <SendIcon className="size-4" />
+                  <span>Send</span>
+                </button>
+              </div>
+            </footer>
           </div>
-        </footer>
+        )}
       </main>
     </div>
   );
