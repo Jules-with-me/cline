@@ -1,0 +1,15 @@
+{
+  "name": "@khizar/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run server/src/server.ts",
+    "dev": "bun run server/src/server.ts"
+  },
+  "dependencies": {
+    "@khizar/core": "workspace:*",
+    "jsonwebtoken": "^9.0.2",
+    "@types/jsonwebtoken": "^9.0.5"
+  }
+}

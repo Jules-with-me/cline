@@ -1,0 +1,24 @@
+{
+  "name": "@khizar/workspace",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/web"
+  ],
+  "engines": {
+    "bun": ">=1.0.0",
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "bun run --filter \"@khizar/*\" build",
+    "dev:server": "bun run --cwd apps/web/server src/server.ts",
+    "dev:client": "bun run --cwd apps/web/client dev",
+    "test": "bun test packages/**/*"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.0.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  }
+}
